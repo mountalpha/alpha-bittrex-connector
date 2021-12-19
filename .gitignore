@@ -21,6 +21,6 @@ _testmain.go
 
 *.exe
 *.test
-go-bittrex.iml
+alpha-bittrex-connector.iml
 .idea/
 examples/examples

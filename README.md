@@ -1,12 +1,12 @@
-go-bittrex [![GoDoc](https://godoc.org/github.com/toorop/go-bittrex?status.svg)](https://godoc.org/github.com/toorop/go-bittrex)
+alpha-bittrex-connector [![GoDoc](https://godoc.org/github.com/childlycorp/alpha-bittrex-connector?status.svg)](https://godoc.org/github.com/childlycorp/alpha-bittrex-connector)
 ==========
 
-go-bittrex is an implementation of the Bittrex API (public and private) in Golang.
+alpha-bittrex-connector is an implementation of the Bittrex API (public and private) in Golang.
 
 This version implement V1.1 Bittrex API and the new HMAC authentification.
 
 ## Import
-	import "github.com/toorop/go-bittrex"
+	import "github.com/childlycorp/alpha-bittrex-connector"
 	
 ## Usage
 
@@ -17,7 +17,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/toorop/go-bittrex"
+	"github.com/childlycorp/alpha-bittrex-connector"
 )
 
 const (
@@ -44,7 +44,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-	"github.com/toorop/go-bittrex"
+	"github.com/childlycorp/alpha-bittrex-connector"
 )
 
 const (
@@ -66,10 +66,10 @@ func main() {
 }
 ~~~
 
-See ["Examples" folder for more... examples](https://github.com/toorop/go-bittrex/blob/master/examples/bittrex.go)
+See ["Examples" folder for more... examples](https://github.com/childlycorp/alpha-bittrex-connector/blob/master/examples/bittrex.go)
 
 ## Documentation
-[![GoDoc](https://godoc.org/github.com/toorop/go-bittrex?status.png)](https://godoc.org/github.com/toorop/go-bittrex)
+[![GoDoc](https://godoc.org/github.com/childlycorp/alpha-bittrex-connector?status.png)](https://godoc.org/github.com/childlycorp/alpha-bittrex-connector)
 
 
 ## Stay tuned
