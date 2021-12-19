@@ -4,12 +4,16 @@ import "github.com/shopspring/decimal"
 
 // Currency struct
 type Currency struct {
-	Currency        string          `json:"Currency"`
-	CurrencyLong    string          `json:"CurrencyLong"`
-	MinConfirmation int             `json:"MinConfirmation"`
-	TxFee           decimal.Decimal `json:"TxFee"`
-	IsActive        bool            `json:"IsActive"`
-	CoinType        string          `json:"CoinType"`
-	BaseAddress     string          `json:"BaseAddress"`
-	Notice          string          `json:"Notice"`
+	Symbol                   string          `json:"symbol"`
+	Name                     string          `json:"name"`
+	CoinType                 string          `json:"coinType"`
+	Status                   string          `json:"status"`
+	MinConfirmation          int             `json:"minConfirmation"`
+	Notice                   string          `json:"notice"`
+	TxFee                    decimal.Decimal `json:"txFee"`
+	LogoUrl                  string          `json:"logoUrl"`
+	BaseAddress              string          `json:"baseAddress"`
+	ProhibitedIn             []string        `json:"prohibitedIn"`
+	AssociatedTermsOfService []string        `json:"associatedTermsOfService"`
+	Tags                     []string        `json:"tags"`
 }

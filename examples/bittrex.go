@@ -15,15 +15,25 @@ func main() {
 	// Bittrex client
 	bittrex := bittrex.New(API_KEY, API_SECRET)
 
-	// Get markets
+	// Get currencies
 
-	markets, _ := bittrex.GetMarkets()
+	currencies, _ := bittrex.GetCurrencies()
 
-	for _, m := range markets {
-		if m.Status == "ONLINE" {
-			fmt.Printf("%s %s\n", m.Symbol, m.QuoteCurrencySymbol)
+	for _, c := range currencies {
+		if c.Status == "ONLINE" {
+			fmt.Printf("%s %s\n", c.Symbol, c.Name)
 		}
 	}
+
+	// Get markets
+
+	// markets, _ := bittrex.GetMarkets()
+
+	// for _, m := range markets {
+	// 	if m.Status == "ONLINE" {
+	// 		fmt.Printf("%s %s\n", m.Symbol, m.QuoteCurrencySymbol)
+	// 	}
+	// }
 
 	// Get Ticker (BTC-VTC)
 
