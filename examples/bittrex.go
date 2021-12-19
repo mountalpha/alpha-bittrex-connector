@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/alexeykaravan/go-bittrex"
+	bittrex "github.com/childlycorp/alpha-bittrex-connector"
 )
 
 const (

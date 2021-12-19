@@ -1,4 +1,4 @@
-module github.com/alexeykaravan/go-bittrex
+module github.com/childlycorp/alpha-bittrex-connector
 
 go 1.16
 
