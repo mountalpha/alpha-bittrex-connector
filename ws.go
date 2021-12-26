@@ -362,3 +362,95 @@ func (b *Bittrex) SubscribeOrderbookUpdates(market string, orderbook chan<- Orde
 
 	}
 }
+
+// SubscribeBalanceUpdates func
+func (b *Bittrex) SubscribeBalanceUpdates(dataCh chan<- BalanceUpdate) error {
+	const timeout = 15 * time.Second
+	client := signalr.NewWebsocketClient()
+
+	client.OnClientMethod = func(hub string, method string, messages []json.RawMessage) {
+
+		switch method {
+		case BALANCE:
+		default:
+			//handle unsupported type
+			fmt.Printf("unsupported message type: %s\n", method)
+			return
+		}
+
+		for _, msg := range messages {
+
+			dbuf, err := base64.StdEncoding.DecodeString(strings.Trim(string(msg), `"`))
+			if err != nil {
+				fmt.Printf("DecodeString error: %s %s\n", err.Error(), string(msg))
+				continue
+			}
+
+			r, err := zlib.NewReader(bytes.NewReader(append([]byte{120, 156}, dbuf...)))
+			if err != nil {
+				fmt.Printf("unzip error %s %s \n", err.Error(), string(msg))
+				continue
+			}
+			defer r.Close()
+
+			var out bytes.Buffer
+			io.Copy(&out, r)
+
+			p := BalanceUpdate{}
+
+			switch method {
+			case BALANCE:
+				json.Unmarshal(out.Bytes(), &p)
+			default:
+				//handle unsupported type
+				//fmt.Printf("unsupported message type: %v", p.Method)
+			}
+
+			select {
+			case dataCh <- p:
+			default:
+				fmt.Printf("missed message: %v", p)
+			}
+		}
+	}
+
+	client.OnMessageError = func(err error) {
+		fmt.Printf("ERROR OCCURRED: %s\n", err.Error())
+	}
+
+	err := doAsyncTimeout(
+		func() error {
+			return client.Connect("https", WSBASE, []string{WSHUB})
+		}, func(err error) {
+			if err == nil {
+				client.Close()
+			}
+		}, timeout)
+	if err != nil {
+		return err
+	}
+
+	defer client.Close()
+
+	err = b.Authentication(client)
+	if err != nil {
+		return err
+	}
+
+	_, err = client.CallHub(WSHUB, "Subscribe", []interface{}{"balance"})
+	if err != nil {
+		return err
+	}
+
+	ticker := time.NewTicker(5 * time.Minute)
+
+	for {
+		<-ticker.C
+
+		err := b.Authentication(client)
+		if err != nil {
+			fmt.Printf("authentication error: %s\n", err)
+			return err
+		}
+	}
+}

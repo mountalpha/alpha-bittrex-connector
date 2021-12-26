@@ -20,6 +20,8 @@ const (
 	//WSHUB SignalR main hub
 	WSHUB = "C3"
 
+	//BALANCE const
+	BALANCE = "balance"
 	//ORDERBOOK const
 	ORDERBOOK = "orderBook"
 	//TICKER const
