@@ -13,17 +13,39 @@ const (
 
 func main() {
 	// Bittrex client
-	bittrex := bittrex.New(API_KEY, API_SECRET)
+	client := bittrex.New(API_KEY, API_SECRET)
 
+	ch := make(chan bittrex.OrderBook, 16)
+	errCh := make(chan error)
+	go func() {
+		errCh <- client.SubscribeOrderbookUpdates("USDT-BTC", ch, nil)
+	}()
+
+	for {
+		update := <-ch
+		fmt.Println(update)
+	}
+
+	// // Get WS Balances
+	// dataCh := make(chan bittrex.BalanceUpdate)
+	// err := client.SubscribeBalanceUpdates(dataCh)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
+	// for {
+	// 	update := <-dataCh
+	// 	fmt.Println(update)
+	// }
 	// Get currencies
 
-	currencies, _ := bittrex.GetCurrencies()
+	// currencies, _ := bittrex.GetCurrencies()
 
-	for _, c := range currencies {
-		if c.Status == "ONLINE" {
-			fmt.Printf("%s %s\n", c.Symbol, c.Name)
-		}
-	}
+	// for _, c := range currencies {
+	// 	if c.Status == "ONLINE" {
+	// 		fmt.Printf("%s %s\n", c.Symbol, c.Name)
+	// 	}
+	// }
 
 	// Get markets
 
