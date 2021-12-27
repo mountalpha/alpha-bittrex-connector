@@ -2,8 +2,8 @@ package bittrex
 
 import "github.com/shopspring/decimal"
 
-type candle struct {
-	TimeStamp  candleTime      `json:"T"`
+type Candle struct {
+	TimeStamp  CandleTime      `json:"T"`
 	Open       decimal.Decimal `json:"O"`
 	Close      decimal.Decimal `json:"C"`
 	High       decimal.Decimal `json:"H"`
@@ -12,6 +12,6 @@ type candle struct {
 	BaseVolume decimal.Decimal `json:"BV"`
 }
 
-type newCandles struct {
-	Ticks []candle `json:"ticks"`
+type NewCandles struct {
+	Ticks []Candle `json:"ticks"`
 }

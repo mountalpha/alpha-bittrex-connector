@@ -2,11 +2,11 @@ package bittrex
 
 import (
 	"encoding/json"
+	//"fmt"
 	"time"
 )
 
-//TIMEFORMAT const
-const TIMEFORMAT = "2006-01-02T15:04:05.999Z"
+const TIME_FORMAT = "2006-01-02T15:04:05"
 
 type jTime struct {
 	time.Time
@@ -17,7 +17,7 @@ func (jt *jTime) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
 	}
-	t, err := time.Parse(TIMEFORMAT, s)
+	t, err := time.Parse(TIME_FORMAT, s)
 	if err != nil {
 		return err
 	}
@@ -26,5 +26,5 @@ func (jt *jTime) UnmarshalJSON(data []byte) error {
 }
 
 func (jt jTime) MarshalJSON() ([]byte, error) {
-	return json.Marshal((*time.Time)(&jt.Time).Format(TIMEFORMAT))
+	return json.Marshal((*time.Time)(&jt.Time).Format(TIME_FORMAT))
 }

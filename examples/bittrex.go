@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"time"
 
 	bittrex "github.com/childlycorp/alpha-bittrex-connector"
 )
@@ -13,33 +15,41 @@ const (
 
 func main() {
 	// Bittrex client
-	client := bittrex.New(API_KEY, API_SECRET)
+	bt := bittrex.New(API_KEY, API_SECRET)
 
-	ch := make(chan bittrex.OrderBook, 16)
+	ch := make(chan bittrex.ExchangeState, 16)
 	errCh := make(chan error)
 	go func() {
-		errCh <- client.SubscribeOrderbookUpdates("USDT-BTC", ch, nil)
+		var haveInit bool
+		var msgNum int
+		for st := range ch {
+			haveInit = haveInit || st.Initial
+			msgNum++
+			if msgNum >= 3 {
+				break
+			}
+		}
+		if haveInit {
+			errCh <- nil
+		} else {
+			errCh <- errors.New("no initial message")
+		}
 	}()
-
-	for {
-		update := <-ch
-		fmt.Println(update)
+	go func() {
+		errCh <- bt.SubscribeExchangeUpdate("USDT-BTC", ch, nil)
+	}()
+	select {
+	case <-time.After(time.Second * 6):
+		fmt.Println("timeout")
+	case err := <-errCh:
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
-	// // Get WS Balances
-	// dataCh := make(chan bittrex.BalanceUpdate)
-	// err := client.SubscribeBalanceUpdates(dataCh)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-
-	// for {
-	// 	update := <-dataCh
-	// 	fmt.Println(update)
-	// }
 	// Get currencies
 
-	// currencies, _ := bittrex.GetCurrencies()
+	// currencies, _ := bt.GetCurrencies()
 
 	// for _, c := range currencies {
 	// 	if c.Status == "ONLINE" {
@@ -48,19 +58,16 @@ func main() {
 	// }
 
 	// Get markets
-
-	// markets, _ := bittrex.GetMarkets()
-
-	// for _, m := range markets {
-	// 	if m.Status == "ONLINE" {
-	// 		fmt.Printf("%s %s\n", m.Symbol, m.QuoteCurrencySymbol)
-	// 	}
-	// }
+	/*
+		markets, err := bittrex.GetMarkets()
+		fmt.Println(err, markets)
+	*/
 
 	// Get Ticker (BTC-VTC)
-
-	//	ticker, err := bittrex.GetTicker("BTC-USD1")
-	//	fmt.Println(err, ticker)
+	/*
+		ticker, err := bittrex.GetTicker("BTC-DRK")
+		fmt.Println(err, ticker)
+	*/
 
 	// Get Distribution (JBS)
 	/*
@@ -123,15 +130,17 @@ func main() {
 	*/
 
 	// Get open orders
-
-	//	orders, err := bittrex.GetOpenOrders("")
-	//	fmt.Println(err, orders)
+	/*
+		orders, err := bittrex.GetOpenOrders("BTC-DOGE")
+		fmt.Println(err, orders)
+	*/
 
 	// Account
 	// Get balances
-
-	//balances, err := bittrex.GetBalances()
-	//fmt.Println(err, balances)
+	/*
+		balances, err := bittrex.GetBalances()
+		fmt.Println(err, balances)
+	*/
 
 	// Get balance
 	/*

@@ -24,3 +24,4 @@ _testmain.go
 alpha-bittrex-connector.iml
 .idea/
 examples/examples
+.env

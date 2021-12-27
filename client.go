@@ -10,12 +10,12 @@ import (
 	"log"
 	"net/http"
 	"net/http/httputil"
+	"strconv"
 	"strings"
 	"time"
 )
 
-//Client struct
-type Client struct {
+type client struct {
 	apiKey      string
 	apiSecret   string
 	httpClient  *http.Client
@@ -24,25 +24,25 @@ type Client struct {
 }
 
 // NewClient return a new Bittrex HTTP client
-func NewClient(apiKey, apiSecret string) (c *Client) {
-	return &Client{apiKey, apiSecret, &http.Client{}, 1 * time.Second, false}
+func NewClient(apiKey, apiSecret string) (c *client) {
+	return &client{apiKey, apiSecret, &http.Client{}, 30 * time.Second, false}
 }
 
-// NewClientWithCustomHTTPConfig returns a new Bittrex HTTP client using the predefined http client
-func NewClientWithCustomHTTPConfig(apiKey, apiSecret string, httpClient *http.Client) (c *Client) {
+// NewClientWithCustomHttpConfig returns a new Bittrex HTTP client using the predefined http client
+func NewClientWithCustomHttpConfig(apiKey, apiSecret string, httpClient *http.Client) (c *client) {
 	timeout := httpClient.Timeout
 	if timeout <= 0 {
 		timeout = 30 * time.Second
 	}
-	return &Client{apiKey, apiSecret, httpClient, timeout, false}
+	return &client{apiKey, apiSecret, httpClient, timeout, false}
 }
 
 // NewClientWithCustomTimeout returns a new Bittrex HTTP client with custom timeout
-func NewClientWithCustomTimeout(apiKey, apiSecret string, timeout time.Duration) (c *Client) {
-	return &Client{apiKey, apiSecret, &http.Client{}, timeout, false}
+func NewClientWithCustomTimeout(apiKey, apiSecret string, timeout time.Duration) (c *client) {
+	return &client{apiKey, apiSecret, &http.Client{}, timeout, false}
 }
 
-func (c Client) dumpRequest(r *http.Request) {
+func (c client) dumpRequest(r *http.Request) {
 	if r == nil {
 		log.Print("dumpReq ok: <nil>")
 		return
@@ -55,21 +55,21 @@ func (c Client) dumpRequest(r *http.Request) {
 	}
 }
 
-func (c Client) dumpResponse(r *http.Response) {
+func (c client) dumpResponse(r *http.Response) {
 	if r == nil {
 		log.Print("dumpResponse ok: <nil>")
 		return
 	}
 	dump, err := httputil.DumpResponse(r, true)
 	if err != nil {
-		fmt.Print("dumpResponse err:", err)
+		log.Print("dumpResponse err:", err)
 	} else {
-		fmt.Print("dumpResponse ok:", string(dump))
+		log.Print("dumpResponse ok:", string(dump))
 	}
 }
 
 // doTimeoutRequest do a HTTP request with timeout
-func (c *Client) doTimeoutRequest(timer *time.Timer, req *http.Request) (*http.Response, error) {
+func (c *client) doTimeoutRequest(timer *time.Timer, req *http.Request) (*http.Response, error) {
 	// Do the request in the background so we can check the timeout
 	type result struct {
 		resp *http.Response
@@ -96,25 +96,23 @@ func (c *Client) doTimeoutRequest(timer *time.Timer, req *http.Request) (*http.R
 }
 
 // do prepare and process HTTP request to Bittrex API
-func (c *Client) do(method string, resource string, payload string, authNeeded bool) (response []byte, err error) {
+func (c *client) do(method string, resource string, payload string, authNeeded bool) (response []byte, err error) {
 	connectTimer := time.NewTimer(c.httpTimeout)
 
 	var rawurl string
 	if strings.HasPrefix(resource, "http") {
 		rawurl = resource
 	} else {
-		rawurl = fmt.Sprintf("%s%s/%s", APIBASE, APIVERSION, resource)
+		rawurl = fmt.Sprintf("%s%s/%s", API_BASE, API_VERSION, resource)
 	}
 
 	req, err := http.NewRequest(method, rawurl, strings.NewReader(payload))
 	if err != nil {
 		return
 	}
-
 	if method == "POST" || method == "PUT" {
 		req.Header.Add("Content-Type", "application/json;charset=utf-8")
 	}
-
 	req.Header.Add("Accept", "application/json")
 
 	// Auth
@@ -124,20 +122,25 @@ func (c *Client) do(method string, resource string, payload string, authNeeded b
 			return
 		}
 
-		apiTimestamp := fmt.Sprintf("%d", time.Now().UnixNano()/1000000)
+		// Payload SHA512 to hex encoding
+		payloadSum := sha512.Sum512([]byte(payload))
+		payloadHash := hex.EncodeToString(payloadSum[:])
 
-		sha512Bytes := sha512.Sum512([]byte(payload))
-		apiContentHash := hex.EncodeToString(sha512Bytes[:])
+		// Unix timestamp in milliseconds
+		nonce := time.Now().Unix() * 1000
 
-		req.Header.Add("Api-Key", c.apiKey)
-		req.Header.Add("Api-Timestamp", apiTimestamp)
-		req.Header.Add("Api-Content-Hash", apiContentHash)
-
-		preSign := strings.Join([]string{apiTimestamp, rawurl, method, apiContentHash}, "")
+		// All of the signature elemnts must be parsed as strings in this array.
+		preSignatura := []string{strconv.Itoa(int(nonce)), req.URL.String(), method, payloadHash}
+		signaturePayload := strings.Join(preSignatura, "")
 
 		mac := hmac.New(sha512.New, []byte(c.apiSecret))
-		_, err = mac.Write([]byte(preSign))
+		_, err = mac.Write([]byte(signaturePayload))
 		sig := hex.EncodeToString(mac.Sum(nil))
+
+		// Add headers
+		req.Header.Add("Api-Key", c.apiKey)
+		req.Header.Add("Api-Timestamp", fmt.Sprintf("%d", nonce))
+		req.Header.Add("Api-Content-Hash", payloadHash)
 		req.Header.Add("Api-Signature", sig)
 	}
 
@@ -148,48 +151,12 @@ func (c *Client) do(method string, resource string, payload string, authNeeded b
 
 	defer resp.Body.Close()
 	response, err = ioutil.ReadAll(resp.Body)
+
 	if err != nil {
-		return nil, err
+		return response, err
 	}
-
-	if resp.StatusCode != 201 && method == "POST" {
-		err = errors.New(resp.Status)
+	if resp.StatusCode != 200 && resp.StatusCode != 201 {
+		err = errors.New(fmt.Sprintf("status: %v message:%s", resp.Status, string(response)))
 	}
-
-	if resp.StatusCode != 200 && (method == "GET" || method == "DELETE") {
-		err = errors.New(resp.Status)
-	}
-
 	return response, err
-}
-
-// do2 prepare and process HTTP request to Bittrex API
-func (c *Client) do2(resource string) (*http.Response, error) {
-	connectTimer := time.NewTimer(c.httpTimeout)
-
-	var rawurl string
-	if strings.HasPrefix(resource, "http") {
-		rawurl = resource
-	} else {
-		rawurl = fmt.Sprintf("%s%s/%s", APIBASE, APIVERSION, resource)
-	}
-
-	req, err := http.NewRequest("GET", rawurl, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Accept", "application/json")
-
-	resp, err := c.doTimeoutRequest(connectTimer, req)
-	if err != nil {
-		return nil, err
-
-	}
-
-	if resp.StatusCode != 200 {
-		return nil, errors.New(resp.Status)
-	}
-
-	return resp, err
 }
