@@ -1,9 +1,7 @@
 package main
 
 import (
-	"errors"
 	"fmt"
-	"time"
 
 	bittrex "github.com/childlycorp/alpha-bittrex-connector"
 )
@@ -17,36 +15,13 @@ func main() {
 	// Bittrex client
 	bt := bittrex.New(API_KEY, API_SECRET)
 
-	ch := make(chan bittrex.ExchangeState, 16)
-	errCh := make(chan error)
-	go func() {
-		var haveInit bool
-		var msgNum int
-		for st := range ch {
-			haveInit = haveInit || st.Initial
-			msgNum++
-			if msgNum >= 3 {
-				break
-			}
-		}
-		if haveInit {
-			errCh <- nil
-		} else {
-			errCh <- errors.New("no initial message")
-		}
-	}()
-	go func() {
-		errCh <- bt.SubscribeExchangeUpdate("USDT-BTC", ch, nil)
-	}()
-	select {
-	case <-time.After(time.Second * 6):
-		fmt.Println("timeout")
-	case err := <-errCh:
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
+	ch := make(chan bittrex.BalanceUpdate)
+	go bt.SubscribeBalanceUpdates(ch)
 
+	for {
+		st := <-ch
+		fmt.Println("channel:", st)
+	}
 	// Get currencies
 
 	// currencies, _ := bt.GetCurrencies()

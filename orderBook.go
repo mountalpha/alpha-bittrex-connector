@@ -21,3 +21,11 @@ type OrderbV3 struct {
 	Quantity decimal.Decimal `json:"quantity"`
 	Rate     decimal.Decimal `json:"rate"`
 }
+
+//OrderbookUpdate struct
+type OrderbookUpdate struct {
+	AccountID string     `json:"accountId"`
+	Sequence  int        `json:"sequence"`
+	BidDeltas []OrderbV3 `json:"bidDeltas"`
+	AskDeltas []OrderbV3 `json:"askDeltas"`
+}

@@ -21,6 +21,22 @@ const (
 	API_VERSION = "v3"
 	WS_BASE     = "socket-v3.bittrex.com" // Bittrex WS API endpoint
 	WS_HUB      = "c3"                    // SignalR main hub
+
+	//ORDERBOOK const
+	BALANCE = "balance"
+
+	//ORDERBOOK const
+	ORDERBOOK = "orderBook"
+	//TICKER const
+	TICKER = "ticker"
+	//ORDER const
+	ORDER = "order"
+	//TRADE const
+	TRADE = "trade"
+	//HEARTBEAT const
+	HEARTBEAT = "heartbeat"
+	//AUTHEXPIRED const
+	AUTHEXPIRED = "authenticationExpiring"
 )
 
 // New returns an instantiated bittrex struct

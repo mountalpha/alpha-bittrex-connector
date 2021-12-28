@@ -1,8 +1,9 @@
 package bittrex
 
 import (
-	"github.com/shopspring/decimal"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 type Balance struct {
@@ -16,8 +17,20 @@ type Balance struct {
 }
 
 type BalanceV3 struct {
-	CurrencySymbol string `json:"currencySymbol"`
+	CurrencySymbol string          `json:"currencySymbol"`
 	Total          decimal.Decimal `json:"total"`
 	Available      decimal.Decimal `json:"available"`
-	UpdatedAt      time.Time `json:"updatedAt"`
+	UpdatedAt      time.Time       `json:"updatedAt"`
+}
+
+//BalanceUpdate struct
+type BalanceUpdate struct {
+	AccountID string `json:"accountId"`
+	Sequence  int    `json:"sequence"`
+	Delta     struct {
+		CurrencySymbol string          `json:"currencySymbol"`
+		Total          decimal.Decimal `json:"total"`
+		Available      decimal.Decimal `json:"available"`
+		UpdatedAt      *jTime          `json:"updatedAt"`
+	} `json:"delta"`
 }
