@@ -406,11 +406,7 @@ func (b *Bittrex) SubscribeBalanceUpdates(dataCh chan<- BalanceUpdate) error {
 				//fmt.Printf("unsupported message type: %v", p.Method)
 			}
 
-			select {
-			case dataCh <- p:
-			default:
-				fmt.Printf("missed message: %v", p)
-			}
+			dataCh <- p
 		}
 	}
 
