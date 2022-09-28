@@ -1,4 +1,4 @@
-module github.com/mountalpha/alpha-bittrex-connector
+module github.com/mountalpha/basecamp-bittrex-connector
 
 go 1.15
 
